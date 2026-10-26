@@ -1,0 +1,2 @@
+# astrbot_plugin_twin_diary
+让ai生成每天定时生成一份公开日记和一份私密日记
