@@ -1,0 +1,335 @@
+{
+  "enabled": {
+    "description": "启用每天自动写日记",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后只保留手动指令，不会在设定时间自动生成。"
+  },
+  "diary_time": {
+    "description": "每天写日记的时间",
+    "type": "string",
+    "default": "22:30",
+    "hint": "24 小时制，格式 HH:MM，例如 22:30、07:05。两篇日记会在同一时间先后生成：先写公开日记并发送，再写私密日记并存档。"
+  },
+  "timezone": {
+    "description": "时区",
+    "type": "string",
+    "default": "Asia/Shanghai",
+    "hint": "IANA 时区名，例如 Asia/Shanghai、Asia/Tokyo。填错时会回退到系统本地时区。"
+  },
+  "jitter_seconds": {
+    "description": "到点后的随机延迟（秒）",
+    "type": "int",
+    "default": 45,
+    "hint": "在设定时间后随机等待 0 到该秒数再开始写，避免和其他主动消息插件在同一秒发消息。设为 0 表示准点。",
+    "slider": {
+      "min": 0,
+      "max": 600,
+      "step": 5
+    }
+  },
+  "catch_up_hours": {
+    "description": "错过后补写的时限（小时）",
+    "type": "int",
+    "default": 3,
+    "hint": "如果到点时 AstrBot 没运行，启动后仍在该时限内会补写；超过时限就跳过当天。设为 0 表示不补写。",
+    "slider": {
+      "min": 0,
+      "max": 24,
+      "step": 1
+    }
+  },
+  "target_session": {
+    "description": "公开日记发送到的会话",
+    "type": "string",
+    "default": "",
+    "hint": "一般不用手填。在目标 QQ 私聊里发送「/日记 绑定」会自动记录；这里手动填写会覆盖绑定结果。格式：平台ID:FriendMessage:QQ号，必须是私聊，填群聊会被拒绝。"
+  },
+  "master_name": {
+    "description": "对那个人的默认称呼",
+    "type": "string",
+    "default": "",
+    "hint": "留空则使用绑定时的 QQ 昵称，再没有就用「主人」。这只是默认值：人设或聊天里有更常用的叫法时，日记会优先用那个，允许同一篇里换称呼。"
+  },
+  "bot_name": {
+    "description": "日记里的默认自称",
+    "type": "string",
+    "default": "",
+    "hint": "留空则使用当前人格的名称。这只是默认值：人设正文里有名字或自称时，优先按人设来。"
+  },
+  "persona_mode": {
+    "description": "人设来源",
+    "type": "string",
+    "default": "session",
+    "options": ["session", "fixed", "custom"],
+    "labels": ["跟随当前会话人格（推荐）", "固定某个人格", "只使用下面这段自定义人设"],
+    "hint": "日记的语气、口癖和价值观都来自这里。推荐跟随会话人格，和聊天时保持一致。"
+  },
+  "persona_id": {
+    "description": "固定人格",
+    "type": "string",
+    "default": "",
+    "_special": "select_persona",
+    "hint": "仅当人设来源选择「固定某个人格」时生效。"
+  },
+  "custom_persona": {
+    "description": "自定义日记人设",
+    "type": "text",
+    "default": "",
+    "hint": "仅当人设来源选择「只使用自定义人设」时生效。写清楚性格、说话方式、在意的事即可。"
+  },
+  "style_extra": {
+    "description": "额外的日记写作要求",
+    "type": "text",
+    "default": "",
+    "hint": "会追加到两篇日记的提示里。例如：多用短句；不要写天气；每篇结尾留一句明天想做的事。"
+  },
+  "public_min_chars": {
+    "description": "公开日记最少字数",
+    "type": "int",
+    "default": 350,
+    "slider": {
+      "min": 100,
+      "max": 1200,
+      "step": 50
+    }
+  },
+  "public_max_chars": {
+    "description": "公开日记最多字数",
+    "type": "int",
+    "default": 700,
+    "slider": {
+      "min": 200,
+      "max": 2000,
+      "step": 50
+    }
+  },
+  "private_diary_enabled": {
+    "description": "同时写私密日记",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后每天只写公开日记，不生成私密那份。"
+  },
+  "private_min_chars": {
+    "description": "私密日记最少字数",
+    "type": "int",
+    "default": 300,
+    "slider": {
+      "min": 100,
+      "max": 1200,
+      "step": 50
+    }
+  },
+  "private_max_chars": {
+    "description": "私密日记最多字数",
+    "type": "int",
+    "default": 800,
+    "slider": {
+      "min": 200,
+      "max": 2000,
+      "step": 50
+    }
+  },
+  "include_date_line": {
+    "description": "正文第一行写日期和星期",
+    "type": "bool",
+    "default": true,
+    "hint": "像真实日记本一样，第一行是「10月26日 星期一」。关闭后直接从正文开始。"
+  },
+  "chat_history_enable": {
+    "description": "从聊天记录里取今天的素材",
+    "type": "bool",
+    "default": true,
+    "hint": "读取绑定会话当前的对话上下文（最近若干条），作为「今天发生了什么」的主要来源。"
+  },
+  "chat_history_limit": {
+    "description": "最多读取多少条聊天消息",
+    "type": "int",
+    "default": 40,
+    "slider": {
+      "min": 0,
+      "max": 200,
+      "step": 5
+    }
+  },
+  "chat_history_max_chars": {
+    "description": "聊天素材的字数上限",
+    "type": "int",
+    "default": 2500,
+    "hint": "超出时从最早的消息开始丢弃，只保留最近的。",
+    "slider": {
+      "min": 500,
+      "max": 8000,
+      "step": 100
+    }
+  },
+  "memory_enable": {
+    "description": "读取长期记忆插件",
+    "type": "bool",
+    "default": true,
+    "hint": "自动连接「astrbot_plugin_memory_companion（我会牢牢记住你）」的 bridge，取回与今天相关的长期记忆。未安装时自动跳过。"
+  },
+  "memory_plugin_name": {
+    "description": "长期记忆插件名",
+    "type": "string",
+    "default": "astrbot_plugin_memory_companion",
+    "hint": "一般不用改。只有你改了记忆插件目录名时才需要修改。"
+  },
+  "memory_top_k": {
+    "description": "长期记忆召回条数",
+    "type": "int",
+    "default": 6,
+    "slider": {
+      "min": 1,
+      "max": 20,
+      "step": 1
+    }
+  },
+  "memory_max_chars": {
+    "description": "长期记忆素材字数上限",
+    "type": "int",
+    "default": 1500,
+    "slider": {
+      "min": 300,
+      "max": 5000,
+      "step": 100
+    }
+  },
+  "memory_timeout": {
+    "description": "记忆检索超时（秒）",
+    "type": "int",
+    "default": 20,
+    "hint": "记忆插件检索太久时跳过，不阻塞当天日记。",
+    "slider": {
+      "min": 3,
+      "max": 60,
+      "step": 1
+    }
+  },
+  "past_days": {
+    "description": "参考前几天的日记",
+    "type": "int",
+    "default": 3,
+    "hint": "读取最近 N 天的日记节选，让 AI 记得自己前几天写过什么。公开日记只参考公开日记，私密日记会同时参考两种。",
+    "slider": {
+      "min": 0,
+      "max": 14,
+      "step": 1
+    }
+  },
+  "past_entry_max_chars": {
+    "description": "每篇旧日记的节选字数",
+    "type": "int",
+    "default": 220,
+    "slider": {
+      "min": 80,
+      "max": 800,
+      "step": 20
+    }
+  },
+  "public_dir": {
+    "description": "公开日记存档目录",
+    "type": "string",
+    "default": "",
+    "hint": "留空则存到 data/plugin_data/astrbot_plugin_twin_diary/public。相对路径基于 AstrBot 的 data 目录；也可以填绝对路径，例如 D:\\AstrBotDiary\\public。"
+  },
+  "private_dir": {
+    "description": "私密日记保存目录",
+    "type": "string",
+    "default": "",
+    "hint": "留空则存到 data/plugin_data/astrbot_plugin_twin_diary/private。可填任意本机文件夹，例如 D:\\私密日记。私密日记不会主动发送，只写在这里。"
+  },
+  "split_public": {
+    "description": "公开日记分段发送",
+    "type": "bool",
+    "default": true,
+    "hint": "把长日记拆成几条消息、带间隔发送，读起来更像人在说话。插件自己发送，不会和第三方分段回复插件重复处理。"
+  },
+  "split_max_chars": {
+    "description": "每条消息最多字数",
+    "type": "int",
+    "default": 260,
+    "slider": {
+      "min": 80,
+      "max": 1000,
+      "step": 20
+    }
+  },
+  "send_interval_min": {
+    "description": "分段发送最小间隔（秒）",
+    "type": "float",
+    "default": 1.5,
+    "slider": {
+      "min": 0.2,
+      "max": 10,
+      "step": 0.1
+    }
+  },
+  "send_interval_max": {
+    "description": "分段发送最大间隔（秒）",
+    "type": "float",
+    "default": 3.5,
+    "slider": {
+      "min": 0.5,
+      "max": 15,
+      "step": 0.1
+    }
+  },
+  "send_retries": {
+    "description": "发送失败重试次数",
+    "type": "int",
+    "default": 2,
+    "slider": {
+      "min": 0,
+      "max": 5,
+      "step": 1
+    }
+  },
+  "provider_id": {
+    "description": "写日记使用的模型",
+    "type": "string",
+    "default": "",
+    "_special": "select_provider",
+    "hint": "留空则使用绑定会话当前使用的聊天模型。想用更便宜或更擅长写作的模型时可以单独指定。"
+  },
+  "temperature": {
+    "description": "写作温度",
+    "type": "float",
+    "default": 0.9,
+    "hint": "越高越发散。日记建议 0.8 到 1.0。",
+    "slider": {
+      "min": 0,
+      "max": 2,
+      "step": 0.05
+    }
+  },
+  "max_tokens": {
+    "description": "单篇最大输出 token",
+    "type": "int",
+    "default": 1600,
+    "hint": "太小会导致日记被截断。中文 700 字左右建议不低于 1200。",
+    "slider": {
+      "min": 200,
+      "max": 8000,
+      "step": 100
+    }
+  },
+  "allow_any_private_bind": {
+    "description": "允许非管理员私聊绑定",
+    "type": "bool",
+    "default": false,
+    "hint": "默认只有 AstrBot 管理员能在私聊里绑定日记接收会话。"
+  },
+  "allow_private_view": {
+    "description": "允许用指令查看私密日记",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后管理员可以在私聊里发「/日记 私密」把当天私密日记单独发给你（不走分段/表情插件）。关闭后只能去文件夹里看。"
+  },
+  "notify_errors": {
+    "description": "失败时通知主人",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后写日记失败会往绑定会话发一条简短提示；关闭则只写日志，可用「/日记 状态」查看上次错误。"
+  }
+}
