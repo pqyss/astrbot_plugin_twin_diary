@@ -7,12 +7,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 from typing import Any
 
 from .textkit import truncate
-
-_LOGGER = logging.getLogger("astrbot_plugin_twin_diary")
 
 
 class MaterialCollector:
@@ -23,18 +20,18 @@ class MaterialCollector:
         context: Any,
         *,
         memory_plugin_name: str = "astrbot_plugin_memory_companion",
-        logger: logging.Logger | None = None,
+        logger: Any,
     ) -> None:
         """初始化收集器。
 
         Args:
             context: AstrBot 的 ``Context`` 对象。
             memory_plugin_name: 长期记忆插件的目录名。
-            logger: 可选的日志对象。
+            logger: 由调用方注入的日志对象，必须来自 AstrBot 的 logger。
         """
         self.context = context
         self.memory_plugin_name = memory_plugin_name
-        self.logger = logger or _LOGGER
+        self.logger = logger
 
     # ----------------------------------------------------------- chat history
 
@@ -298,7 +295,7 @@ async def _call_with_timeout(
     method_name: str,
     timeout: float,
     kwargs: dict,
-    logger: logging.Logger,
+    logger: Any,
     *,
     default: Any = "",
 ) -> Any:

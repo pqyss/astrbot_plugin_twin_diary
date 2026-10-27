@@ -42,18 +42,29 @@ class StorePaths:
     public_dir: Path
     private_dir: Path
     state_path: Path
+    blocked: tuple[str, ...] = ()
+    """被安全策略回退到默认目录的配置项，例如 ``("public",)``。"""
 
 
-def resolve_path(base_dir: Path, raw: str, default: Path) -> Path:
+def resolve_path(
+    base_dir: Path,
+    raw: str,
+    default: Path,
+    *,
+    allowed_root: Path | None = None,
+    allow_external: bool = True,
+) -> Path:
     """解析配置里的目录：支持留空、相对路径、绝对路径和 ``~``。
 
     Args:
-        base_dir: 相对路径的基准目录（AstrBot 的 data 目录）。
+        base_dir: 相对路径的基准目录（默认应是插件数据目录）。
         raw: 配置值。
-        default: 配置为空时使用的默认目录。
+        default: 配置为空或越界时使用的默认目录。
+        allowed_root: 允许写入的根目录；None 表示不限制。
+        allow_external: 是否允许写到 ``allowed_root`` 之外。
 
     Returns:
-        绝对路径。
+        解析后的绝对路径。
     """
     text = str(raw or "").strip()
     if not text:
@@ -63,7 +74,38 @@ def resolve_path(base_dir: Path, raw: str, default: Path) -> Path:
         target = Path(expanded)
         if not target.is_absolute():
             target = Path(base_dir) / target
-    return target.expanduser().resolve()
+    resolved = target.expanduser().resolve()
+    if allowed_root is not None and not allow_external:
+        try:
+            resolved.relative_to(Path(allowed_root).resolve())
+        except ValueError:
+            return Path(default).expanduser().resolve()
+    return resolved
+
+
+def _is_external_target(base_dir: Path, raw: str, allowed_root: Path) -> bool:
+    """判断配置路径是否会落到允许目录之外。
+
+    Args:
+        base_dir: 相对路径的基准目录。
+        raw: 配置值。
+        allowed_root: 允许写入的根目录。
+
+    Returns:
+        路径为空或在允许目录内时返回 False。
+    """
+    text = str(raw or "").strip()
+    if not text:
+        return False
+    expanded = os.path.expandvars(os.path.expanduser(text))
+    target = Path(expanded)
+    if not target.is_absolute():
+        target = Path(base_dir) / target
+    try:
+        target.expanduser().resolve().relative_to(Path(allowed_root).resolve())
+    except ValueError:
+        return True
+    return False
 
 
 def build_paths(
@@ -72,32 +114,54 @@ def build_paths(
     plugin_data_dir: Path,
     public_setting: str,
     private_setting: str,
+    allow_external: bool = False,
 ) -> StorePaths:
     """根据配置构造目录结构。
+
+    默认只允许写到插件数据目录之下。相对路径以插件数据目录为基准；
+    绝对路径或 ``..`` 越界只有在 ``allow_external=True`` 时才允许。
 
     Args:
         data_dir: AstrBot 的 data 目录。
         plugin_data_dir: 本插件的数据目录。
         public_setting: 公开日记目录配置。
         private_setting: 私密日记目录配置。
+        allow_external: 是否允许写到插件数据目录之外。
 
     Returns:
         解析后的路径集合。
     """
     plugin_data_dir = Path(plugin_data_dir).resolve()
+    default_public = plugin_data_dir / "public"
+    default_private = plugin_data_dir / "private"
+    blocked: list[str] = []
+
+    public_dir = resolve_path(
+        plugin_data_dir,
+        public_setting,
+        default_public,
+        allowed_root=plugin_data_dir,
+        allow_external=allow_external,
+    )
+    private_dir = resolve_path(
+        plugin_data_dir,
+        private_setting,
+        default_private,
+        allowed_root=plugin_data_dir,
+        allow_external=allow_external,
+    )
+    if not allow_external:
+        if _is_external_target(plugin_data_dir, public_setting, plugin_data_dir):
+            blocked.append("public")
+        if _is_external_target(plugin_data_dir, private_setting, plugin_data_dir):
+            blocked.append("private")
+
     return StorePaths(
         data_dir=Path(data_dir).resolve(),
-        public_dir=resolve_path(
-            Path(data_dir),
-            public_setting,
-            plugin_data_dir / "public",
-        ),
-        private_dir=resolve_path(
-            Path(data_dir),
-            private_setting,
-            plugin_data_dir / "private",
-        ),
+        public_dir=public_dir,
+        private_dir=private_dir,
         state_path=plugin_data_dir / "state.json",
+        blocked=tuple(blocked),
     )
 
 

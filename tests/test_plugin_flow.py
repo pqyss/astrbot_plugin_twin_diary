@@ -5,7 +5,6 @@
 
 import asyncio
 import json
-import logging
 import sys
 import types
 import unittest
@@ -20,6 +19,23 @@ _RUNTIME_ROOT = PLUGIN_ROOT / "tests" / "_runtime"
 
 
 # ---------------------------------------------------------------- AstrBot 桩
+
+
+class DummyLogger:
+    def debug(self, *args, **kwargs):
+        pass
+
+    def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
+        pass
+
+    def error(self, *args, **kwargs):
+        pass
+
+    def exception(self, *args, **kwargs):
+        pass
 
 
 class FakeMessageChain:
@@ -61,7 +77,7 @@ def install_astrbot_stub():
         return
     astrbot = types.ModuleType("astrbot")
     api = types.ModuleType("astrbot.api")
-    api.logger = logging.getLogger("astrbot.test")
+    api.logger = DummyLogger()
     api.AstrBotConfig = dict
 
     star_mod = types.ModuleType("astrbot.api.star")

@@ -8,6 +8,20 @@ from types import SimpleNamespace
 from core.memory import MaterialCollector
 
 
+class DummyLogger:
+    def debug(self, *args, **kwargs):
+        pass
+
+    def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
+        pass
+
+    def error(self, *args, **kwargs):
+        pass
+
+
 class FakeConversation:
     def __init__(self, history):
         self.history = json.dumps(history, ensure_ascii=False)
@@ -69,7 +83,7 @@ class MemoryTest(unittest.TestCase):
             },
             {"role": "tool", "content": "工具结果"},
         ]
-        collector = MaterialCollector(FakeContext(history=history))
+        collector = MaterialCollector(FakeContext(history=history), logger=DummyLogger())
         text = asyncio.run(
             collector.collect_chat(
                 "napcat:FriendMessage:123",
@@ -86,7 +100,7 @@ class MemoryTest(unittest.TestCase):
 
     def test_collect_chat_respects_budget(self):
         history = [{"role": "user", "content": "很长的消息" * 100} for _ in range(20)]
-        collector = MaterialCollector(FakeContext(history=history))
+        collector = MaterialCollector(FakeContext(history=history), logger=DummyLogger())
         text = asyncio.run(
             collector.collect_chat(
                 "napcat:FriendMessage:123",
@@ -98,7 +112,7 @@ class MemoryTest(unittest.TestCase):
         self.assertLessEqual(len(text), 400)
 
     def test_collect_chat_without_conversation(self):
-        collector = MaterialCollector(FakeContext(history=None))
+        collector = MaterialCollector(FakeContext(history=None), logger=DummyLogger())
         self.assertEqual(
             asyncio.run(
                 collector.collect_chat(
@@ -112,7 +126,7 @@ class MemoryTest(unittest.TestCase):
 
     def test_collect_long_term_uses_bridge(self):
         bridge = FakeBridge("记忆包内容")
-        collector = MaterialCollector(FakeContext(bridge=bridge))
+        collector = MaterialCollector(FakeContext(bridge=bridge), logger=DummyLogger())
         text = asyncio.run(
             collector.collect_long_term(
                 query="今天发生了什么",
@@ -130,7 +144,7 @@ class MemoryTest(unittest.TestCase):
         self.assertEqual(bridge.calls[0]["session_context"]["scope"], "private")
 
     def test_collect_long_term_without_plugin(self):
-        collector = MaterialCollector(FakeContext(bridge=None))
+        collector = MaterialCollector(FakeContext(bridge=None), logger=DummyLogger())
         text = asyncio.run(
             collector.collect_long_term(
                 query="今天发生了什么",
@@ -145,7 +159,7 @@ class MemoryTest(unittest.TestCase):
 
     def test_bridge_failure_does_not_raise(self):
         bridge = FakeBridge(fail=True)
-        collector = MaterialCollector(FakeContext(bridge=bridge))
+        collector = MaterialCollector(FakeContext(bridge=bridge), logger=DummyLogger())
         text = asyncio.run(
             collector.collect_long_term(
                 query="今天发生了什么",

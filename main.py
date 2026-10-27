@@ -1047,13 +1047,21 @@ class TwinDiaryPlugin(Star):
         Returns:
             存储对象。
         """
+        allow_external = self._cfg_bool("allow_external_dirs", False)
         try:
             paths = build_paths(
                 data_dir=self.data_dir,
                 plugin_data_dir=self.plugin_data_dir,
                 public_setting=self._cfg_str("public_dir", ""),
                 private_setting=self._cfg_str("private_dir", ""),
+                allow_external=allow_external,
             )
+            if paths.blocked:
+                logger.warning(
+                    "双面日记：%s 指向插件数据目录之外，且未开启 allow_external_dirs，"
+                    "已回退到插件数据目录",
+                    "、".join(paths.blocked),
+                )
             if paths.public_dir == paths.private_dir:
                 logger.error("双面日记：公开与私密目录相同，私密日记改用独立目录")
                 paths = build_paths(
@@ -1061,6 +1069,7 @@ class TwinDiaryPlugin(Star):
                     plugin_data_dir=self.plugin_data_dir,
                     public_setting=self._cfg_str("public_dir", ""),
                     private_setting=str(self.plugin_data_dir / "private"),
+                    allow_external=allow_external,
                 )
             return DiaryStore(paths)
         except (OSError, ValueError):
@@ -1348,6 +1357,7 @@ class TwinDiaryPlugin(Star):
             f"记忆插件：{memory}\n"
             f"公开存档：{self.store.paths.public_dir}\n"
             f"私密目录：{self.store.paths.private_dir}\n"
+            f"外部目录：{'允许' if self._cfg_bool('allow_external_dirs', False) else '关闭（仅插件数据目录）'}\n"
             f"上次错误：{truncate(last_error, 200)}"
         )
 
@@ -1360,6 +1370,7 @@ class TwinDiaryPlugin(Star):
                     "memory_plugin_name",
                     "astrbot_plugin_memory_companion",
                 ),
+                logger=logger,
             )
             return collector.memory_plugin_available()
         except Exception:

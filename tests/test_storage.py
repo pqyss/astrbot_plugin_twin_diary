@@ -42,8 +42,22 @@ class StorageTest(unittest.TestCase):
             public_setting="日记/公开",
             private_setting=str(self.root / "secret"),
         )
-        self.assertEqual(paths.public_dir, (self.data_dir / "日记" / "公开").resolve())
-        self.assertEqual(paths.private_dir, (self.root / "secret").resolve())
+        self.assertEqual(
+            paths.public_dir,
+            (self.plugin_dir / "日记" / "公开").resolve(),
+        )
+        self.assertEqual(paths.private_dir, (self.plugin_dir / "private").resolve())
+        self.assertEqual(paths.blocked, ("private",))
+
+        allowed = build_paths(
+            data_dir=self.data_dir,
+            plugin_data_dir=self.plugin_dir,
+            public_setting="日记/公开",
+            private_setting=str(self.root / "secret"),
+            allow_external=True,
+        )
+        self.assertEqual(allowed.private_dir, (self.root / "secret").resolve())
+        self.assertEqual(allowed.blocked, ())
 
     def test_save_and_read(self):
         day = date(2026, 10, 26)

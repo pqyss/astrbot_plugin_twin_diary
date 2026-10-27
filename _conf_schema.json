@@ -227,17 +227,23 @@
       "step": 20
     }
   },
+  "allow_external_dirs": {
+    "description": "允许把日记写到插件数据目录之外",
+    "type": "bool",
+    "default": false,
+    "hint": "出于数据迁移与审计考虑，默认只允许 data/plugin_data/astrbot_plugin_twin_diary 下的目录。开启后才能使用 D:\\私密日记 这类外部绝对路径；外部目录不会随插件备份/迁移，需要你自己管理。"
+  },
   "public_dir": {
     "description": "公开日记存档目录",
     "type": "string",
     "default": "",
-    "hint": "留空则存到 data/plugin_data/astrbot_plugin_twin_diary/public。相对路径基于 AstrBot 的 data 目录；也可以填绝对路径，例如 D:\\AstrBotDiary\\public。"
+    "hint": "留空则存到插件数据目录的 public。相对路径以插件数据目录为基准；绝对路径或 \u002e\u002e 越界默认会被回退，需先开启 allow_external_dirs。"
   },
   "private_dir": {
     "description": "私密日记保存目录",
     "type": "string",
     "default": "",
-    "hint": "留空则存到 data/plugin_data/astrbot_plugin_twin_diary/private。可填任意本机文件夹，例如 D:\\私密日记。私密日记不会主动发送，只写在这里。"
+    "hint": "留空则存到插件数据目录的 private。相对路径以插件数据目录为基准；要放到 D:\\私密日记 这类外部目录，请先开启 allow_external_dirs。私密日记不会主动发送。"
   },
   "split_public": {
     "description": "公开日记分段发送",

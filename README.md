@@ -21,7 +21,7 @@
 3. 在插件配置里确认：
    - `diary_time`：每天几点写，默认 `22:30`
    - `timezone`：默认 `Asia/Shanghai`
-   - `private_dir`：私密日记保存到哪（建议填一个本机绝对路径，别放网盘同步目录）
+   - `private_dir`：私密日记保存到哪。默认在插件数据目录；要放外部文件夹，先开启 `allow_external_dirs`，再填绝对路径（外部目录不随插件备份/迁移，需自行管理）
    - 其他保持默认即可
 4. 确认你的 QQ 在 AstrBot 的**管理员列表**里（WebUI → 配置 → 管理员 ID；或 `admins_id`）。
 5. 用**管理员 QQ** 在要接收日记的**私聊**里发送：
@@ -115,8 +115,9 @@
 | `memory_top_k` / `memory_max_chars` / `memory_timeout` | 6 / 1500 / 20 | 记忆召回条数、字数、超时 |
 | `past_days` | `3` | 参考前几天日记 |
 | `past_entry_max_chars` | `220` | 每篇旧日记节选长度 |
-| `public_dir` | 空 | 公开日记存档目录；空则 `data/plugin_data/.../public` |
-| `private_dir` | 空 | 私密日记目录；空则 `data/plugin_data/.../private` |
+| `allow_external_dirs` | `false` | 允许写到插件数据目录之外；默认关闭 |
+| `public_dir` | 空 | 公开日记存档目录；空则插件数据目录下的 `public/` |
+| `private_dir` | 空 | 私密日记目录；空则插件数据目录下的 `private/` |
 | `split_public` | `true` | 公开日记分段发送 |
 | `split_max_chars` | `260` | 每条消息最大字数 |
 | `send_interval_min` / `send_interval_max` | 1.5 / 3.5 | 分段间隔（秒） |
@@ -128,7 +129,11 @@
 | `allow_private_view` | `false` | 允许 `/日记 私密` 把私密日记单独发给你 |
 | `notify_errors` | `false` | 失败时往绑定会话发提示 |
 
-目录规则：留空 = 插件数据目录；相对路径 = 相对 `AstrBot/data`；也支持绝对路径和 `~`。
+目录规则：留空 = 插件数据目录下的 `public/` 或 `private/`；相对路径 = 相对插件数据目录；绝对路径和 `~` 只有在 `allow_external_dirs` 开启时才允许，否则会回退到默认目录并在日志里提示。
+
+> 数据迁移提示：插件默认把日记和 `state.json` 都放在 `data/plugin_data/astrbot_plugin_twin_diary` 下，备份/迁移 AstrBot 时可以一起带走。开启 `allow_external_dirs` 后写到 `D:\私密日记` 之类的目录，不会随插件数据备份，审计时也需要单独授权；这是为满足「私密日记放在自定义文件夹」而保留的显式选项。
+>
+> **升级注意**：如果你之前就把 `private_dir` / `public_dir` 设在插件数据目录之外，升级后请先把 `allow_external_dirs` 设为 `true` 再保存配置；否则插件会回退到插件数据目录，看起来像旧日记“消失”了。
 
 > `temperature` / `max_tokens` 只在 Provider 支持时生效；AstrBot 的部分内置 Provider 会忽略这两个参数。需要严格限制输出长度时，请在 Provider 配置里使用 `custom_extra_body`。
 
