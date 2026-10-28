@@ -1,7 +1,7 @@
 name: astrbot_plugin_twin_diary
 display_name: 双面日记
 author: ZhuanZ
-version: 1.0.0
+version: 1.0.1
 desc: 每天在指定时间让 AI 用当前人设写两篇日记：一篇给主人看，一篇只留在本机的私密日记；自动读取聊天记录、长期记忆与历史日记。
 short_desc: 每天两篇有人设、有记忆的日记，一篇给你看，一篇藏在本机。
 category: 生活
